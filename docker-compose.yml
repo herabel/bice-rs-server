@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:17
+    container_name: bice_db
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - bice_network
+
+  cache:
+    image: redis:8.6.2
+    container_name: bice_cache
+    restart: always
+    networks:
+      - bice_network
+
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: bice_server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - REDIS_URL=redis://cache:6379
+    depends_on:
+      - db
+      - cache
+    networks:
+      - bice_network
+
+volumes:
+  db_data:
+
+networks:
+  bice_network:
+    driver: bridge
