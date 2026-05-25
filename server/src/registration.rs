@@ -153,7 +153,7 @@ async fn user_exists(login: &str, email: Option<&str>, pool: &PgPool) -> Result<
     //TODO: СДЕЛАТЬ ВАРИАТИВНОСТЬ EMAIL 
 
     let count: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM users WHERE login = $1 OR email IS NOT DISTINCT FROM $2"
+        "SELECT COUNT(*) FROM users WHERE login = $1 OR ($2 IS NOT NULL AND email = $2)"
     )
     .bind(login)
     .bind(email)
